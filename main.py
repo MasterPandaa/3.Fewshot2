@@ -1,7 +1,8 @@
-import sys
 import math
 import random
+import sys
 import time
+
 import pygame
 
 # ---------------
@@ -30,7 +31,7 @@ MAZE_LAYOUT = [
     [1, 2, 2, 2, 2, 2, 1],
     [1, 3, 1, 1, 1, 3, 1],
     [1, 2, 2, 2, 2, 2, 1],
-    [1, 1, 1, 1, 1, 1, 1]
+    [1, 1, 1, 1, 1, 1, 1],
 ]
 ROWS = len(MAZE_LAYOUT)
 COLS = len(MAZE_LAYOUT[0])
@@ -42,26 +43,28 @@ OFFSET_X = (SCREEN_WIDTH - MAZE_PIXEL_W) // 2
 OFFSET_Y = (SCREEN_HEIGHT - MAZE_PIXEL_H) // 2
 
 # Gameplay settings
-PACMAN_SPEED = 3.0   # pixels per frame
-GHOST_SPEED = 2.5    # pixels per frame
+PACMAN_SPEED = 3.0  # pixels per frame
+GHOST_SPEED = 2.5  # pixels per frame
 FRIGHTENED_SPEED = 1.5
 POWER_DURATION = 6.0  # seconds
 START_LIVES = 3
 
 # Utility
 DIR_VECTORS = {
-    'STOP': pygame.Vector2(0, 0),
-    'UP': pygame.Vector2(0, -1),
-    'DOWN': pygame.Vector2(0, 1),
-    'LEFT': pygame.Vector2(-1, 0),
-    'RIGHT': pygame.Vector2(1, 0),
+    "STOP": pygame.Vector2(0, 0),
+    "UP": pygame.Vector2(0, -1),
+    "DOWN": pygame.Vector2(0, 1),
+    "LEFT": pygame.Vector2(-1, 0),
+    "RIGHT": pygame.Vector2(1, 0),
 }
-OPPOSITE = {'UP': 'DOWN', 'DOWN': 'UP', 'LEFT': 'RIGHT', 'RIGHT': 'LEFT'}
+OPPOSITE = {"UP": "DOWN", "DOWN": "UP", "LEFT": "RIGHT", "RIGHT": "LEFT"}
 
 
 def grid_to_pixel(gx, gy):
-    return pygame.Vector2(OFFSET_X + gx * TILE_SIZE + TILE_SIZE / 2,
-                          OFFSET_Y + gy * TILE_SIZE + TILE_SIZE / 2)
+    return pygame.Vector2(
+        OFFSET_X + gx * TILE_SIZE + TILE_SIZE / 2,
+        OFFSET_Y + gy * TILE_SIZE + TILE_SIZE / 2,
+    )
 
 
 def pixel_to_grid(px, py):
@@ -86,8 +89,12 @@ def is_center_of_tile(pos):
 def legal_directions(gpos):
     gx, gy = gpos
     options = []
-    for name, vec in [('UP', DIR_VECTORS['UP']), ('DOWN', DIR_VECTORS['DOWN']),
-                      ('LEFT', DIR_VECTORS['LEFT']), ('RIGHT', DIR_VECTORS['RIGHT'])]:
+    for name, vec in [
+        ("UP", DIR_VECTORS["UP"]),
+        ("DOWN", DIR_VECTORS["DOWN"]),
+        ("LEFT", DIR_VECTORS["LEFT"]),
+        ("RIGHT", DIR_VECTORS["RIGHT"]),
+    ]:
         nx, ny = gx + int(vec.x), gy + int(vec.y)
         if not is_wall(nx, ny):
             options.append(name)
@@ -98,8 +105,8 @@ class Pacman:
     def __init__(self, grid_start):
         self.grid = pygame.Vector2(grid_start)
         self.pos = grid_to_pixel(int(self.grid.x), int(self.grid.y))
-        self.dir_name = 'STOP'
-        self.next_dir = 'STOP'
+        self.dir_name = "STOP"
+        self.next_dir = "STOP"
         self.radius = TILE_SIZE * 0.35
         self.alive = True
         self.lives = START_LIVES
@@ -110,12 +117,16 @@ class Pacman:
     def reset_to_start(self, grid_start):
         self.grid = pygame.Vector2(grid_start)
         self.pos = grid_to_pixel(int(self.grid.x), int(self.grid.y))
-        self.dir_name = 'STOP'
-        self.next_dir = 'STOP'
+        self.dir_name = "STOP"
+        self.next_dir = "STOP"
 
     def update(self, dt):
         # Handle turning at tile centers
-        if self.next_dir != self.dir_name and self.next_dir != 'STOP' and is_center_of_tile(self.pos):
+        if (
+            self.next_dir != self.dir_name
+            and self.next_dir != "STOP"
+            and is_center_of_tile(self.pos)
+        ):
             gx, gy = pixel_to_grid(self.pos.x, self.pos.y)
             vec = DIR_VECTORS[self.next_dir]
             if not is_wall(gx + int(vec.x), gy + int(vec.y)):
@@ -135,7 +146,7 @@ class Pacman:
                 # Snap to center to avoid jitter
                 cx, cy = grid_to_pixel(*pixel_to_grid(self.pos.x, self.pos.y))
                 self.pos.update(cx, cy)
-                self.dir_name = 'STOP'
+                self.dir_name = "STOP"
 
         # Update grid coord
         self.grid.update(*pixel_to_grid(self.pos.x, self.pos.y))
@@ -152,21 +163,33 @@ class Pacman:
 
     def draw(self, surface):
         # Draw Pacman as a pie (arc)
-        direction = self.dir_name if self.dir_name != 'STOP' else 'RIGHT'
+        direction = self.dir_name if self.dir_name != "STOP" else "RIGHT"
         angle_offset = {
-            'RIGHT': 0,
-            'LEFT': 180,
-            'UP': 90,
-            'DOWN': 270,
+            "RIGHT": 0,
+            "LEFT": 180,
+            "UP": 90,
+            "DOWN": 270,
         }[direction]
         mouth = math.radians(self.mouth_angle)
         start_angle = math.radians(angle_offset) + mouth
         end_angle = math.radians(angle_offset) - mouth + 2 * math.pi
-        pygame.draw.circle(surface, YELLOW, (int(self.pos.x), int(self.pos.y)), int(self.radius))
+        pygame.draw.circle(
+            surface, YELLOW, (int(self.pos.x), int(self.pos.y)), int(self.radius)
+        )
         # Draw mouth by covering with background arc
-        pygame.draw.arc(surface, BLACK, pygame.Rect(self.pos.x - self.radius, self.pos.y - self.radius,
-                                                    self.radius * 2, self.radius * 2),
-                        start_angle, end_angle, int(self.radius))
+        pygame.draw.arc(
+            surface,
+            BLACK,
+            pygame.Rect(
+                self.pos.x - self.radius,
+                self.pos.y - self.radius,
+                self.radius * 2,
+                self.radius * 2,
+            ),
+            start_angle,
+            end_angle,
+            int(self.radius),
+        )
 
 
 class Ghost:
@@ -175,7 +198,7 @@ class Ghost:
         self.grid = pygame.Vector2(grid_start)
         self.pos = grid_to_pixel(int(self.grid.x), int(self.grid.y))
         self.color = color
-        self.dir_name = random.choice(['UP', 'DOWN', 'LEFT', 'RIGHT'])
+        self.dir_name = random.choice(["UP", "DOWN", "LEFT", "RIGHT"])
         self.radius = TILE_SIZE * 0.35
         self.frightened = False
         self.frightened_timer = 0.0
@@ -193,7 +216,7 @@ class Ghost:
                 self.frightened = False
 
         # Movement logic: random at intersections, avoid reversing unless forced
-        vec = DIR_VECTORS.get(self.dir_name, DIR_VECTORS['STOP'])
+        vec = DIR_VECTORS.get(self.dir_name, DIR_VECTORS["STOP"])
         speed = FRIGHTENED_SPEED if self.frightened else GHOST_SPEED
 
         # If at tile center, potentially choose a new direction
@@ -203,7 +226,9 @@ class Ghost:
             # Do not choose to go into a wall; already filtered
             # Avoid immediate reverse unless it's the only choice
             if self.dir_name in options and len(options) > 1:
-                options_no_reverse = [d for d in options if d != OPPOSITE.get(self.dir_name, '')]
+                options_no_reverse = [
+                    d for d in options if d != OPPOSITE.get(self.dir_name, "")
+                ]
             else:
                 options_no_reverse = options
             if options_no_reverse:
@@ -222,7 +247,9 @@ class Ghost:
             if is_center_of_tile(self.pos):
                 gx, gy = int(self.grid.x), int(self.grid.y)
                 options = legal_directions((gx, gy))
-                options = [d for d in options if d != OPPOSITE.get(self.dir_name, '')] or options
+                options = [
+                    d for d in options if d != OPPOSITE.get(self.dir_name, "")
+                ] or options
                 if options:
                     self.dir_name = self.rng.choice(options)
 
@@ -232,7 +259,11 @@ class Ghost:
         # Ghost is circle with little rectangle on bottom (simple)
         color = BLUE if self.frightened else self.color
         # Flash when frightened time is almost over
-        if self.frightened and self.frightened_timer < 2.0 and int(self.frightened_timer * 4) % 2 == 0:
+        if (
+            self.frightened
+            and self.frightened_timer < 2.0
+            and int(self.frightened_timer * 4) % 2 == 0
+        ):
             color = WHITE
         x, y = int(self.pos.x), int(self.pos.y)
         r = int(self.radius)
@@ -247,7 +278,7 @@ class Ghost:
     def reset_to_start(self):
         self.grid = self.grid_start.copy()
         self.pos = grid_to_pixel(int(self.grid.x), int(self.grid.y))
-        self.dir_name = random.choice(['UP', 'DOWN', 'LEFT', 'RIGHT'])
+        self.dir_name = random.choice(["UP", "DOWN", "LEFT", "RIGHT"])
         self.frightened = False
         self.frightened_timer = 0.0
 
@@ -255,11 +286,11 @@ class Ghost:
 class Game:
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption('Contoh Pacman')
+        pygame.display.set_caption("Contoh Pacman")
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.SysFont('arial', 22)
-        self.big_font = pygame.font.SysFont('arial', 36, bold=True)
+        self.font = pygame.font.SysFont("arial", 22)
+        self.big_font = pygame.font.SysFont("arial", 36, bold=True)
 
         # Build pellets from layout
         self.pellets = set()
@@ -298,13 +329,13 @@ class Game:
     def handle_input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP] or keys[pygame.K_w]:
-            self.pacman.next_dir = 'UP'
+            self.pacman.next_dir = "UP"
         elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            self.pacman.next_dir = 'DOWN'
+            self.pacman.next_dir = "DOWN"
         elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.pacman.next_dir = 'LEFT'
+            self.pacman.next_dir = "LEFT"
         elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.pacman.next_dir = 'RIGHT'
+            self.pacman.next_dir = "RIGHT"
 
     def update(self, dt):
         if self.game_over or self.win:
@@ -332,7 +363,9 @@ class Game:
 
         # Collisions with ghosts
         for g in self.ghosts:
-            if (self.pacman.pos - g.pos).length() < (self.pacman.radius + g.radius) * 0.8:
+            if (self.pacman.pos - g.pos).length() < (
+                self.pacman.radius + g.radius
+            ) * 0.8:
                 if g.frightened:
                     # Eat ghost
                     self.pacman.score += 200
@@ -355,7 +388,12 @@ class Game:
         # Draw maze walls and tiles
         for y in range(ROWS):
             for x in range(COLS):
-                rect = pygame.Rect(OFFSET_X + x * TILE_SIZE, OFFSET_Y + y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+                rect = pygame.Rect(
+                    OFFSET_X + x * TILE_SIZE,
+                    OFFSET_Y + y * TILE_SIZE,
+                    TILE_SIZE,
+                    TILE_SIZE,
+                )
                 if MAZE_LAYOUT[y][x] == 1:
                     pygame.draw.rect(surface, BLUE, rect, border_radius=8)
                 else:
@@ -363,17 +401,19 @@ class Game:
                     pygame.draw.rect(surface, (10, 10, 10), rect)
 
         # Draw pellets
-        for (x, y) in self.pellets:
+        for x, y in self.pellets:
             center = grid_to_pixel(x, y)
             pygame.draw.circle(surface, WHITE, (int(center.x), int(center.y)), 5)
         # Draw power pellets (blink)
         blink_on = (pygame.time.get_ticks() // 300) % 2 == 0
-        for (x, y) in self.power_pellets:
+        for x, y in self.power_pellets:
             center = grid_to_pixel(x, y)
             if blink_on:
                 pygame.draw.circle(surface, ORANGE, (int(center.x), int(center.y)), 10)
             else:
-                pygame.draw.circle(surface, (180, 100, 0), (int(center.x), int(center.y)), 10)
+                pygame.draw.circle(
+                    surface, (180, 100, 0), (int(center.x), int(center.y)), 10
+                )
 
     def draw_hud(self, surface):
         score_text = self.font.render(f"Score: {self.pacman.score}", True, WHITE)
@@ -381,7 +421,9 @@ class Game:
         surface.blit(score_text, (20, 20))
         surface.blit(lives_text, (20, 48))
         if self.power_timer > 0:
-            power_text = self.font.render(f"Power: {self.power_timer:.1f}s", True, ORANGE)
+            power_text = self.font.render(
+                f"Power: {self.power_timer:.1f}s", True, ORANGE
+            )
             surface.blit(power_text, (20, 76))
 
         if self.game_over:
@@ -423,5 +465,5 @@ class Game:
         sys.exit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     Game().run()
